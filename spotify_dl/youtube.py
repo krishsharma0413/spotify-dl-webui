@@ -13,7 +13,6 @@ from mutagen.mp3 import MP3
 from spotify_dl.scaffold import log
 from spotify_dl.utils import sanitize
 
-
 def default_filename(**kwargs):
     """name without number"""
     return sanitize(
@@ -140,106 +139,90 @@ def set_tags(temp, filename, kwargs):
     song_file.save()
 
 
-def find_and_download_songs(kwargs):
+def find_and_download_songs(kwargs, name, artist, album, i, temp, sponsorblock_postprocessor, reference_file, files):
     """
     function handles actual download of the songs
     the youtube_search lib is used to search for songs and get best url
     :param kwargs: dictionary of key value arguments to be used in download
     """
-    sponsorblock_postprocessor = []
-    reference_file = kwargs["reference_file"]
-    files = {}
-    # await kwargs["websocket"].send_text("Starting Download")
-    with open(reference_file, "r", encoding="utf-8") as file:
-        for line in file:
-            temp = line.split(";")
-            name, artist, album, i = (
-                temp[0],
-                temp[1],
-                temp[4],
-                int(temp[-1].replace("\n", "")),
-            )
 
-            query = f"{artist} - {name} Lyrics".replace(":", "").replace('"', "")
-            print(f"Initiating download for {query}.")
+    query = f"{artist} - {name} Lyrics".replace(":", "").replace('"', "")
+    print(f"Initiating download for {query}.")
 
-            file_name = kwargs["file_name_f"](
-                name=name, artist=artist, track_num=kwargs["track_db"][i].get("playlist_num")
-            )
+    file_name = kwargs["file_name_f"](
+        name=name, artist=artist, track_num=kwargs["track_db"][i].get("playlist_num")
+    )
 
-            if kwargs["use_sponsorblock"][0].lower() == "y":
-                sponsorblock_postprocessor = [
-                    {
-                        "key": "SponsorBlock",
-                        "categories": ["skip_non_music_sections"],
-                    },
-                    {
-                        "key": "ModifyChapters",
-                        "remove_sponsor_segments": ["music_offtopic"],
-                        "force_keyframes": True,
-                    },
-                ]
-            save_path = kwargs["track_db"][i]["save_path"]
-            file_path = path.join(save_path, file_name)
+    if kwargs["use_sponsorblock"][0].lower() == "y":
+        sponsorblock_postprocessor = [
+            {
+                "key": "SponsorBlock",
+                "categories": ["skip_non_music_sections"],
+            },
+            {
+                "key": "ModifyChapters",
+                "remove_sponsor_segments": ["music_offtopic"],
+                "force_keyframes": True,
+            },
+        ]
+    save_path = kwargs["track_db"][i]["save_path"]
+    file_path = path.join(save_path, file_name)
 
-            mp3file_path = f"{file_path}.mp3"
+    mp3file_path = f"{file_path}.mp3"
 
-            if save_path not in files:
-                path_files = set()
-                files[save_path] = path_files
-            else:
-                path_files = files[save_path]
+    if save_path not in files:
+        path_files = set()
+        files[save_path] = path_files
+    else:
+        path_files = files[save_path]
 
-            path_files.add(f"{file_name}.mp3")
+    path_files.add(f"{file_name}.mp3")
 
-            if (
-                kwargs["no_overwrites"]
-                and not kwargs["skip_mp3"]
-                and path.exists(mp3file_path)
-            ):
-                print(f"File {mp3file_path} already exists, we do not overwrite it ")
-                continue
+    if (
+        kwargs["no_overwrites"]
+        and not kwargs["skip_mp3"]
+        and path.exists(mp3file_path)
+    ):
+        print(f"File {mp3file_path} already exists, we do not overwrite it ")
+        return
 
-            outtmpl = f"{file_path}.%(ext)s"
-            ydl_opts = {
-                "proxy": kwargs.get("proxy"),
-                "default_search": "ytsearch",
-                "format": "bestaudio/best",
-                "outtmpl": outtmpl,
-                "postprocessors": sponsorblock_postprocessor,
-                "noplaylist": True,
-                "no_color": False,
-                "postprocessor_args": [
-                    "-metadata",
-                    "title=" + name,
-                    "-metadata",
-                    "artist=" + artist,
-                    "-metadata",
-                    "album=" + album,
-                ],
-            }
-            if not kwargs["skip_mp3"]:
-                mp3_postprocess_opts = {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
-                    "preferredquality": "192",
-                }
-                ydl_opts["postprocessors"].append(mp3_postprocess_opts.copy())
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                try:
-                    ydl.download([query])
-                except Exception as e:  # skipcq: PYL-W0703
-                    log.debug(e)
-                    print(f"Failed to download {name}, make sure yt_dlp is up to date")
-            if not kwargs["skip_mp3"]:
-                set_tags(temp, mp3file_path, kwargs)
-            # await kwargs["websocket"].send_text("+1")
-        if kwargs["remove_trailing_tracks"] == "y":
-            for save_path in files:
-                for f in os.listdir(save_path):
-                    if f not in files[save_path]:
-                        print(f"File {f} is not in the playlist anymore, we delete it")
-                        os.remove(path.join(save_path, f))
+    outtmpl = f"{file_path}.%(ext)s"
+    ydl_opts = {
+        "proxy": kwargs.get("proxy"),
+        "default_search": "ytsearch",
+        "format": "bestaudio/best",
+        "outtmpl": outtmpl,
+        "postprocessors": sponsorblock_postprocessor,
+        "noplaylist": True,
+        "no_color": False,
+        "postprocessor_args": [
+            "-metadata",
+            "title=" + name,
+            "-metadata",
+            "artist=" + artist,
+            "-metadata",
+            "album=" + album,
+        ],
+    }
+    if not kwargs["skip_mp3"]:
+        mp3_postprocess_opts = {
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
+        }
+        ydl_opts["postprocessors"].append(mp3_postprocess_opts.copy())
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        try:
+            ydl.download([query])
+        except Exception as e:  # skipcq: PYL-W0703
+            log.debug(e)
+            print(f"Failed to download {name}, make sure yt_dlp is up to date")
+    if not kwargs["skip_mp3"]:
+        set_tags(temp, mp3file_path, kwargs)
+    
+    return
+    
+        
 
 
 def multicore_find_and_download_songs(kwargs):
@@ -319,8 +302,5 @@ def download_songs(**kwargs):
     reference_file = str(kwargs["output_dir"]) + "/" + reference_file
     kwargs["reference_file"] = reference_file
     kwargs["track_db"] = track_db
-    if kwargs["multi_core"] > 1:
-        multicore_find_and_download_songs(kwargs)
-    else:
-        find_and_download_songs(kwargs)
-    os.remove(reference_file)
+    return kwargs
+    
