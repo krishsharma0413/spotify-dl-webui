@@ -34,7 +34,7 @@ The progress of the download can be seen using websockets. 🫶🏻
 
 The download is complete. 🎉
 ![image](./assets/thankyou.png)
-
+The download button will download the a zip file which contains all your music data. The Mp3 files has complete metadata regarding the artist name, album name, BPM, etc.
 
 ## License 📜
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
