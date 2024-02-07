@@ -7,12 +7,17 @@ A simple web interface for [spotify-dl](https://github.com/SathyaBhat/spotify-dl
 1. Clone the [repository](https://github.com/krishsharma0413/spotify-dl-webui)
 2. Install the requirements
 3. Run the server
-
 ```bash
 git clone https://github.com/krishsharma0413/spotify-dl-webui.git
 cd spotify-dl-webui
 pip install -r requirements.txt
 py main.py
+```
+
+4. Create a new `cred.env` file and add the following details:
+```env
+CLIENTID = YOUR_SPOTIFY_CLIENT_ID
+CLIENTSECRET = YOUR_SPOTIFY_CLIENT_SECRET
 ```
 
 ## Features 🎉
