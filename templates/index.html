@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spotify-dl-webui</title>
     <link rel="stylesheet" href="/static/output.css">
 </head>
+
 <body class="font-sharetech text-[black]">
     <nav class="w-full bg-gray-400 p-[20px]">
         <h1 class="text-[40px]">
@@ -14,17 +16,19 @@
     </nav>
 
     <!-- the magic -->
-    <section class="w-full h-[calc(100%-100px)] flex justify-center place-items-center">
+    <section id="main-section" class="w-full h-[calc(100%-100px)] flex justify-center place-items-center">
         <div class="text-center border-[8px] border-gray-400 rounded-md p-[20px] w-[80%] xl:w-[50%]">
             <p class="font-bold text-[20px] sm:text-[30px]">
                 Spotify Playlist Downloader
             </p>
             <p class="my-[20px]">
-                <input id="url-input" placeholder="Enter playlist URL" class="border-gray-400 border-[4px] rounded-md w-full focus:outline-none p-2">
+                <input id="url-input" placeholder="Enter playlist URL"
+                    class="border-gray-400 border-[4px] rounded-md w-full focus:outline-none p-2">
             </p>
 
             <p class="mb-[20px]">
-                <button id="url-input" placeholder="Enter playlist URL" class="border-gray-400 border-[4px] rounded-md focus:outline-none px-5 py-2">SUBMIT</button>
+                <button id="submit-button" placeholder="Enter playlist URL"
+                    class="border-gray-400 border-[4px] rounded-md focus:outline-none px-5 py-2">SUBMIT</button>
             </p>
         </div>
     </section>
@@ -39,5 +43,73 @@
             [contribute]
         </p>
     </div>
+
+    <script>
+
+        // post request
+        
+        const submitButton = document.getElementById('submit-button');
+        var urlInput = document.getElementById('url-input');
+
+        // random number between 1 - 100000
+        var random = Math.floor(Math.random() * 100000) + 1;
+
+        var ws = new WebSocket(`ws://localhost:8000/processing/${random}`);
+        var total = 0;
+        var counter = 0;
+        ws.onmessage = function(event) {
+            var messages = document.getElementById('ws-message')
+            var content = event.data;
+            if(String(content).startsWith("Total Songs")){
+                total = Number(content.split(" ")[2]);
+                messages.innerHTML = content;
+            }else if(String(content) == "+1"){
+                counter += 1;
+                messages.innerHTML = `Downloaded ${counter} of ${total} songs.`;
+            }else if(String(content).startsWith("completed")){
+                dataurl = content.split(": ")[1];
+                messages.innerHTML = "All songs downloaded";
+                document.getElementById("download-button-div").innerHTML = `
+                    <p class="mb-[20px]">
+                    <a href="${dataurl}" class="border-gray-400 border-[4px] rounded-md focus:outline-none px-5 py-2">DOWNLOAD</a>
+                </p>
+            `;
+            }else{
+                messages.innerHTML = content;
+            }
+        };
+        function sendMessage(event) {
+            ws.send(urlInput.value)
+            event.preventDefault()
+
+            document.getElementById("main-section").innerHTML = `
+            <div class="text-center border-[8px] border-gray-400 rounded-md p-[20px] w-[80%] xl:w-[50%]">
+                <p class="font-bold text-[20px] sm:text-[30px]">
+                    Processing your request
+                </p>
+                <p id="ws-message" class="my-[20px]">
+                    A download button will appear soon. Please wait.
+                </p>
+
+                <div id="download-button-div">
+                    
+                </div>
+            </div>`;
+
+        }
+
+            //             document.getElementById("download-button-div").innerHTML = `
+            //             <p class="mb-[20px]">
+            //                 <a href="${data.songurl}" class="border-gray-400 border-[4px] rounded-md focus:outline-none px-5 py-2">DOWNLOAD</a>
+            //             </p>
+            //         `;
+
+
+        submitButton.addEventListener('click', () => {
+            sendMessage(event)
+        });
+
+    </script>
 </body>
+
 </html>
