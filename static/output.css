@@ -449,7 +449,7 @@ video {
 
   font-style: normal;
 
-  src: url('../fonts/ShareTechMono-Regular.ttf') format('truetype');
+  src: url('/static/ShareTechMono-Regular.ttf') format('truetype');
 }
 
 *, ::before, ::after {
