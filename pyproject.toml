@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "spotify-dl-webui"
+version = "0.1.0"
+description = "A web UI for spotify-dl to download spotify playlist, album or track directly from website."
+authors = ["krishsharma0413 <krishsharma0413@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.109.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

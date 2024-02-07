@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 
+npx tailwindcss -i src/input.css -o dist/output.css --watch
+*/
+
+@layer base {
+  @font-face {
+    font-family: 'sharetech';
+    font-style: normal;
+    src: url('../fonts/ShareTechMono-Regular.ttf') format('truetype');
+  }
+}
+
+html, body{
+  height: 100%;
+}
